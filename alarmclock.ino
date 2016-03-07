@@ -5,6 +5,18 @@
 #include "Wire.h" //including wire library
 #include <LiquidCrystal.h> //including lcd library
 LiquidCrystal lcd(43, 45, 47, 49, 51, 53); //declaring pin numbers for lcd
+const int clkPin = 2;
+const int dtPin = 3;
+const int swPin = 4;
+
+int buttonPress = 0;
+
+int minutes = 0;
+int hours = 0;
+int day = 0;
+int date = 0;
+int month = 0;
+int year = 0;
 
 byte decToBcd(byte val)
 {
@@ -25,6 +37,10 @@ void setup()
 	delay(5000);
 	lcd.clear();
 	setDS3231time(00, 00, 00, 01, 01, 01, 16);
+	pinMode(clkPin, INPUT);//set clkPin as INPUT
+	pinMode(dtPin, INPUT);
+	pinMode(swPin, INPUT);
+	digitalWrite(swPin, HIGH);
 }
 void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year)
 {
@@ -116,9 +132,100 @@ void displayTime(){
 	delay(1000);
 }
 
+int getEncoderTurn(void)
+{
+	static int oldA = HIGH;
+	static int oldB = HIGH;
+	int result = 0;
+	int newA = digitalRead(clkPin);//read the value of clkPin to newA
+	int newB = digitalRead(dtPin);//read the value of dtPin to newB
+	if (newA != oldA || newB != oldB)
+	{
+		// something has changed
+		if (oldA == HIGH && newA == LOW)
+		{
+			result = (oldB * 2 - 1);
+		}
+	}
+	oldA = newA;
+	oldB = newB;
+	return result;
+}
+
+void setTime(){
+	if (digitalRead(swPin) == LOW){
+		buttonPress += 1;
+		delay(1000);
+	}
+	if (buttonPress == 1){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		minutes = minutes + change;
+		lcd.print("Minutes = ");
+		lcd.print(minutes);
+		delay(10);
+	}
+	if (buttonPress == 2){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		hours = hours + change;
+		lcd.print("Hours = ");
+		lcd.print(hours);
+		delay(10);
+	}
+	if (buttonPress == 3){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		day = day + change;
+		lcd.print("Day = ");
+		lcd.print(day);
+		delay(10);
+	}
+	if (buttonPress == 4){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		date = date + change;
+		lcd.print("Date = ");
+		lcd.print(date);
+		delay(10);
+	}
+	if (buttonPress == 5){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		month = month + change;
+		lcd.print("month = ");
+		lcd.print(month);
+		delay(10);
+	}
+	if (buttonPress == 6){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		year = year + change;
+		lcd.print("year = ");
+		lcd.print(year);
+		delay(10);
+	}
+	if (buttonPress == 7){
+		setDS3231time(00, minutes, hours, day, date, month, year);
+		lcd.clear();
+		lcd.print("Press To Finish");
+		delay(10);
+	}
+	if (buttonPress == 8){
+		displayTime();
+	}
+	
+
+}
 
 void loop()
 {
-	displayTime();
+	setTime();
 
 }
