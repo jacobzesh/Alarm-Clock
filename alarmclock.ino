@@ -8,8 +8,10 @@ LiquidCrystal lcd(43, 45, 47, 49, 51, 53); //declaring pin numbers for lcd
 const int clkPin = 2;
 const int dtPin = 3;
 const int swPin = 4;
+const int tonePin = 8;
 
 int buttonPress = 0;
+int toneFreq = 0;
 
 int minutes = 0;
 int hours = 0;
@@ -17,6 +19,8 @@ int day = 0;
 int date = 0;
 int month = 0;
 int year = 0;
+int alarmMinutes = 0;
+int alarmHours = 0;
 
 byte decToBcd(byte val)
 {
@@ -36,7 +40,6 @@ void setup()
 	lcd.print("TEST");    //Beginning lcd and testing
 	delay(5000);
 	lcd.clear();
-	setDS3231time(00, 00, 00, 01, 01, 01, 16);
 	pinMode(clkPin, INPUT);//set clkPin as INPUT
 	pinMode(dtPin, INPUT);
 	pinMode(swPin, INPUT);
@@ -212,20 +215,55 @@ void setTime(){
 		delay(10);
 	}
 	if (buttonPress == 7){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		alarmHours = alarmHours + change;
+		lcd.print("Alarm Hour = ");
+		lcd.print(alarmHours);
+		delay(10);
+	}
+	if (buttonPress == 8){
+		lcd.clear();
+		lcd.setCursor(0, 0);
+		int change = getEncoderTurn();
+		alarmMinutes = alarmMinutes + change;
+		lcd.print("Alarm Minutes = ");
+		lcd.setCursor(0, 1);
+		lcd.print(alarmMinutes);
+		delay(10);
+	}
+	if (buttonPress == 9){
 		setDS3231time(00, minutes, hours, day, date, month, year);
 		lcd.clear();
 		lcd.print("Press To Finish");
 		delay(10);
 	}
-	if (buttonPress == 8){
+	if (buttonPress == 10){
 		displayTime();
 	}
-	
+}
 
+void alarm(){
+	byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+	// retrieve data from DS3231
+	readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month,
+		&year);
+	if (hour == alarmHours){
+		if (minute == alarmMinutes){
+			for (toneFreq = 500; toneFreq < 1000; toneFreq++){
+				tone(tonePin, toneFreq);
+				delay(10);
+				}
+			noTone(tonePin);
+		}
+	}
 }
 
 void loop()
 {
+	
 	setTime();
+	alarm();
 
 }
